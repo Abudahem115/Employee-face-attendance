@@ -17,7 +17,6 @@ def admin():
     stats = db_manager.get_stats()
     return render_template('admin.html', users=users, stats=stats)
 
-# --- تصحيح اسم الدالة هنا ليكون delete_user ---
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
     if db_manager.delete_user(user_id):

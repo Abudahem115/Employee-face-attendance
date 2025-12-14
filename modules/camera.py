@@ -20,11 +20,8 @@ class VideoCamera:
         self.consecutive_frames = 2
         self.eye_aspect_ratio_threshold = 0.23
         
-        # متغيرات التحسين
         self.frame_counter = 0
         
-        # --- ذاكرة الرسومات (الحل للمشكلة) ---
-        # سنحفظ هنا آخر أماكن للوجوه لنرسمها في كل الفريمات
         self.last_locations = []
         self.last_names = []
         self.last_statuses = []
@@ -45,9 +42,7 @@ class VideoCamera:
 
         self.frame_counter += 1
         
-        # نقوم بتحديث الذكاء الاصطناعي فقط كل 3 فريمات
         if self.frame_counter % 3 == 0:
-            # تنظيف الذاكرة القديمة
             self.last_locations = []
             self.last_names = []
             self.last_statuses = []
@@ -62,16 +57,15 @@ class VideoCamera:
                 face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
                 face_landmarks_list = face_recognition.face_landmarks(rgb_small_frame, face_locations)
                 
-                # نفترض وجهاً واحداً للتبسيط
                 face_encoding = face_encodings[0]
-                face_loc = face_locations[0] # هذا الموقع للصورة الصغيرة
+                face_loc = face_locations[0] 
                 
                 matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=0.5)
                 face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
                 
                 name = "Unknown"
                 status_text = "Scanning..."
-                color = (0, 255, 255) # أصفر
+                color = (0, 255, 255) 
 
                 if len(face_distances) > 0:
                     best_match_index = np.argmin(face_distances)
@@ -79,7 +73,6 @@ class VideoCamera:
                         name = self.known_face_names[best_match_index]
                         user_id = self.known_face_ids[best_match_index]
                         
-                        # منطق الرمش
                         is_blink = False
                         if len(face_landmarks_list) > 0:
                             landmarks = face_landmarks_list[0]
@@ -108,15 +101,12 @@ class VideoCamera:
                             status_text = "PLEASE BLINK"
                             color = (0, 165, 255)
 
-                # حفظ النتائج في الذاكرة لنستخدمها في الفريمات القادمة
                 self.last_locations.append(face_loc)
                 self.last_names.append(name)
                 self.last_statuses.append(status_text)
                 self.last_colors.append(color)
 
-        # --- قسم الرسم (يعمل في كل فريم باستخدام الذاكرة) ---
         for (top, right, bottom, left), name, status, color in zip(self.last_locations, self.last_names, self.last_statuses, self.last_colors):
-            # تكبير الإحداثيات ×4 لأننا حسبناها على الصورة الصغيرة
             top *= 4
             right *= 4
             bottom *= 4

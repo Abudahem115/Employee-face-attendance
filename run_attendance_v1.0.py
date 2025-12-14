@@ -7,7 +7,6 @@ import time
 def main():
     print("--- 📷 Smart Attendance System Operation ---")
     
-    # 1. تحميل البيانات
     users = db_manager.get_all_users()
     if not users:
         print("❌ No employees!")
@@ -15,10 +14,8 @@ def main():
 
     known_face_encodings = [user["encoding"] for user in users]
     known_face_names = [user["name"] for user in users]
-    known_face_ids = [user["id"] for user in users] # نحتاج الـ ID للتسجيل
+    known_face_ids = [user["id"] for user in users] 
     
-    # قاموس لحفظ وقت آخر تسجيل لكل شخص لمنع التكرار
-    # الشكل: { user_id: time_of_last_scan }
     last_attendance = {}
 
     video_capture = cv2.VideoCapture(0)
@@ -28,7 +25,6 @@ def main():
         ret, frame = video_capture.read()
         if not ret: break
 
-        # تصغير ومعالجة الصورة
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
         rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
@@ -39,7 +35,6 @@ def main():
             name = "Unknown"
             user_id = None
 
-            # المطابقة
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.5)
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
 
@@ -49,20 +44,15 @@ def main():
                     name = known_face_names[best_match_index]
                     user_id = known_face_ids[best_match_index]
 
-                    # --- منطق تسجيل الحضور ---
                     current_time = time.time()
                     
-                    # إذا لم يسجل من قبل، أو مر وقت كافٍ (مثلاً 60 ثانية) على آخر تسجيل
                     if user_id not in last_attendance or (current_time - last_attendance[user_id] > 60):
                         db_manager.mark_attendance(user_id)
                         last_attendance[user_id] = current_time
                         print(f"✅ Attendance has been recorded: {name}")
-                    # ---------------------------
 
-            # الرسم على الشاشة
             top *= 4; right *= 4; bottom *= 4; left *= 4
             
-            # تغيير اللون: أخضر إذا تم التسجيل حديثاً، أزرق إذا كان مجرد مشاهدة
             color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
             
             cv2.rectangle(frame, (left, top), (right, bottom), color, 2)

@@ -108,13 +108,10 @@ def mark_attendance(user_id):
     finally:
         conn.close()
         
-# ... (أضف هذا في نهاية ملف db_manager.py)
 
 def get_recent_attendance():
-    """جلب آخر 5 أشخاص حضروا للعرض في الموقع"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    # نربط جدول الحضور بجدول الأسماء
     query = '''
         SELECT users.name, attendance.timestamp 
         FROM attendance 
@@ -125,11 +122,9 @@ def get_recent_attendance():
     cursor.execute(query)
     rows = cursor.fetchall()
     conn.close()
-    # تحويل البيانات لقائمة قواميس
     return [{"name": row["name"], "time": row["timestamp"]} for row in rows]
 
 def get_attendance_report():
-    """جلب السجل كاملاً لملف الإكسل"""
     conn = get_db_connection()
     cursor = conn.cursor()
     query = '''
@@ -143,13 +138,9 @@ def get_attendance_report():
     conn.close()
     return rows
 
-# ... (أضف هذا في نهاية ملف modules/db_manager.py)
-
 def get_users_list():
-    """جلب قائمة الموظفين لعرضها في لوحة التحكم"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    # نجلب الاسم، الـ ID، وتاريخ التسجيل، وعدد البصمات المحفوظة
     query = '''
         SELECT u.id, u.name, u.created_at, COUNT(f.id) as face_count 
         FROM users u 
@@ -162,15 +153,11 @@ def get_users_list():
     return rows
 
 def delete_user(user_id):
-    """حذف موظف وجميع بياناته (بصمات + سجل حضور)"""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # 1. حذف بصمات الوجه
         cursor.execute('DELETE FROM faces WHERE user_id = ?', (user_id,))
-        # 2. حذف سجلات الحضور
         cursor.execute('DELETE FROM attendance WHERE user_id = ?', (user_id,))
-        # 3. حذف المستخدم نفسه
         cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
         conn.commit()
         print(f"[INFO] User {user_id} deleted successfully.")
@@ -182,15 +169,12 @@ def delete_user(user_id):
         conn.close()
 
 def get_stats():
-    """إحصائيات سريعة للوحة التحكم"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # عدد الموظفين
     cursor.execute('SELECT COUNT(*) FROM users')
     user_count = cursor.fetchone()[0]
     
-    # عدد حضور اليوم
     today = datetime.now().strftime("%Y-%m-%d")
     cursor.execute('SELECT COUNT(DISTINCT user_id) FROM attendance WHERE timestamp LIKE ?', (f'{today}%',))
     attendance_count = cursor.fetchone()[0]
