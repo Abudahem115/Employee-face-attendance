@@ -1,1 +1,7 @@
-.venv/ 
+.venv/
+__pycache__/
+*.pyc
+instance/
+.DS_Store
+database/attendance.db
+attendance_evidence/

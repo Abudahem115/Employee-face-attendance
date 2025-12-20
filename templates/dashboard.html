@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard Overview</h2>
+    
+    <div class="card p-2 bg-white shadow-sm">
+        <form action="/" method="get" class="d-flex align-items-center gap-2">
+            <label class="fw-bold small text-muted">Select Month:</label>
+            <select name="month" class="form-select form-select-sm" style="width: 150px;" onchange="this.form.submit()">
+                {% for m in months %}
+                <option value="{{ m }}" {{ 'selected' if m == stats.selected_month }}>{{ m }}</option>
+                {% endfor %}
+            </select>
+            
+            <a href="{{ url_for('download_detailed_csv', month=stats.selected_month) }}" class="btn btn-sm btn-success text-nowrap">
+                <i class="fas fa-file-csv me-1"></i> Download Report
+            </a>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.total_users }}</h3>
+                    <p class="mb-0 opacity-75">Total Employees</p>
+                </div>
+                <i class="fas fa-users fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-success text-white p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.monthly_attendance }}</h3>
+                    <p class="mb-0 opacity-75">Present in {{ stats.selected_month }}</p>
+                </div>
+                <i class="fas fa-calendar-check fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-success">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i> Present Today ({{ daily_status.present|length }})
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for user in daily_status.present %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-success">{{ user['name'] }}</span>
+                        <span class="badge bg-success rounded-pill">Checked In</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3">No one has checked in yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="fas fa-times-circle me-2"></i> Absent Today ({{ daily_status.absent|length }})
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for user in daily_status.absent %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-secondary">{{ user['name'] }}</span>
+                        <span class="badge bg-light text-danger border border-danger rounded-pill">Absent</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3">Everyone is present! 🎉</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-4 shadow-sm">
+    <h5 class="card-title text-muted mb-4">Attendance Trends (Last 6 Months)</h5>
+    <canvas id="chart" height="80"></canvas>
+</div>
+
+<script id="chart-data" type="application/json">{{ {'labels': chart_data.labels, 'data': chart_data.data} | tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartMeta = JSON.parse(document.getElementById('chart-data').textContent);
+    const ctx = document.getElementById('chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartMeta.labels,
+            datasets: [{
+                label: 'Unique Attendees',
+                data: chartMeta.data,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+</script>
+{% endblock %}

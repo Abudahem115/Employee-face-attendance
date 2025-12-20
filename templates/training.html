@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center">
+    <h3>Training Face for: <span class="text-primary">{{ name }}</span></h3>
+    <p>Please look at the camera. The system will auto-capture 20 samples.</p>
+    
+    <div class="card d-inline-block p-2 bg-dark">
+        <img src="{{ url_for('training_feed') }}" width="640" height="480" style="border-radius: 10px;">
+    </div>
+    
+    <div class="mt-4">
+        <div class="spinner-border text-primary" role="status"></div>
+        <span class="ms-2">Processing... Please wait</span>
+    </div>
+</div>
+
+<script>
+    // فحص دوري هل انتهى التدريب؟
+    setInterval(function() {
+        fetch('/check_training_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'finished') {
+                    window.location.href = "{{ url_for('employees') }}";
+                }
+            });
+    }, 1000);
+</script>
+{% endblock %}
